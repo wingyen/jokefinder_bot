@@ -10,7 +10,10 @@ Part 2: Code Review
     - delete un-used imports
     - delete comments in code. unless you have a good reason to leave it there, you can comment the reason additionally
     - function name "addd_user_message" has to be corrected as it was a spelling mistake -> "add_user_message"
-    - expected 2 blank lines before each function and class, if there is decorators above a function, the expected two blank lines before the decorator
     - should use lowercase with words separated by underscores when naming functions, like `conversationPersistence()`
 * Task 2:
     - the `else` branch and continuous conversations in retrieve_conversation_history are not covered by the test.
+    - added tests below the old code in 'test_retrieve_history'
+
+Part 3:
+

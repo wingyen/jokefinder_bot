@@ -54,7 +54,6 @@ def conversationPersistence(
     yield conversation
 
 
-
 class ChuckNorrisBot:
     def handle_message(self, message_text: Text, conversation: Conversation) -> None:
         conversation.addd_user_message(message_text)
@@ -67,8 +66,45 @@ class ChuckNorrisBot:
 
     def retrieve_joke(self) -> Text:
         response = requests.get("https://api.chucknorris.io/jokes/random")
-
         return response.json()["value"]
+
+
+class ChuckNorrisJokeFinderBot:
+    def handle_message(self, message_text: Text, conversation: Conversation) -> None:
+        conversation.addd_user_message(message_text)
+        _process_finder_message(message_text, conversation)
+
+
+def _process_finder_message(message_text: Text, conversation: Conversation) -> None:
+    message_size = len(message_text)
+    conversation_size = len(conversation.conversation_events)
+
+    if conversation_size <= 1:
+        conversation.add_bot_message(f"Welcome! Let me find you jokes about {message_text}")
+
+    if message_size in range(3, 121):
+        """If message size is not between 3 and 120, the api will return status 400 with error: Bad request
+        """
+        jokes = _finder_retrieve_joke(message_text)
+        if jokes:
+            for joke in jokes:
+                conversation.add_bot_message(joke)
+
+        else:
+            conversation.add_bot_message("Sorry! No jokes found. Try another word.")
+
+    else:
+        conversation.add_bot_message("You have an invalid input, please try again. Size must be between 3 and 120.")
+
+
+def _finder_retrieve_joke(message: Text) -> List[Text]:
+    response = requests.get(f"https://api.chucknorris.io/jokes/search?query={message}")
+    data = response.json()["result"]
+    joke_list = []
+    if data:
+        joke_list.append([i["value"] for i in data])
+
+    return joke_list
 
 @app.route("/user/<username>/message", methods=["POST"])
 def handle_user_message(username: Text) -> Text:
@@ -81,8 +117,11 @@ def handle_user_message(username: Text) -> Text:
         The bot's responses.
     """
     message_text = request.json["text"]
+    query_arg = request.args.get("bot_type", "")
 
     f = ChuckNorrisBot()
+    if query_arg == "jokeFinder":
+        f = ChuckNorrisJokeFinderBot()
 
     with conversationPersistence(username) as conversation:
         f.handle_message(message_text, conversation)
@@ -92,6 +131,7 @@ def handle_user_message(username: Text) -> Text:
         ]
 
         return jsonify(bot_responses)
+
 
 @app.route("/user/<username>/message", methods=["GET"])
 def retrieve_conversation_history(username: Text) -> Text:
@@ -108,6 +148,7 @@ def retrieve_conversation_history(username: Text) -> Text:
         return jsonify(history)
     else:
         return jsonify(history), 404
+
 
 if __name__ == "__main__":
     print("Serveris running")
