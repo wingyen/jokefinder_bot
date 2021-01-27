@@ -32,3 +32,16 @@ def test_retrieve_history(client: FlaskClient):
     assert history[0] == {"message": "Hello", "type": "user"}
     assert history[1] == {"message": "Welcome! Let me tell you a joke.", "type": "bot"}
     assert history[2]["type"] == "bot"
+
+    client.post("/user/test_retrieve/message", json={"text": "Tell me more"})
+    response3 = client.get("/user/test_retrieve/message")
+
+    assert response3.status_code == 200
+    assert len(response3.json) == 5
+
+    response2 = client.get("/user/test1/message")
+    history2 = response2.json
+
+    assert response2.status_code == 404
+    assert bool(history2) is False
+

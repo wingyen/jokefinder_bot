@@ -53,7 +53,7 @@ def conversationPersistence(
 
     yield conversation
 
-    inmemory_storage[conversation_id] += conversation.new_events_dict()
+
 
 class ChuckNorrisBot:
     def handle_message(self, message_text: Text, conversation: Conversation) -> None:
