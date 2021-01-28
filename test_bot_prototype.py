@@ -91,4 +91,5 @@ def test_retrieve_finder_history(client: FlaskClient):
     body = o.get_response_bodies()["4"]
 
     assert re.status_code == 200
-
+    assert body[0]["type"] == "user"
+    assert body[2]["type"] == "bot"

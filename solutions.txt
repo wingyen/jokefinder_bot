@@ -11,9 +11,10 @@ Part 2: Code Review
     - delete comments in code. unless you have a good reason to leave it there, you can comment the reason additionally
     - function name "addd_user_message" has to be corrected as it was a spelling mistake -> "add_user_message"
     - should use lowercase with words separated by underscores when naming functions, like `conversationPersistence()`
+    - in tests, you can have test classes to make post responses reusable for same bot.
 * Task 2:
     - the `else` branch and continuous conversations in retrieve_conversation_history are not covered by the test.
     - added tests below the old code in 'test_retrieve_history'
 
 Part 3:
-
+FYI: Also added tests for ChuckNorrisJokeFinderBot

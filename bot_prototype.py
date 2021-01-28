@@ -72,39 +72,46 @@ class ChuckNorrisBot:
 class ChuckNorrisJokeFinderBot:
     def handle_message(self, message_text: Text, conversation: Conversation) -> None:
         conversation.addd_user_message(message_text)
-        _process_finder_message(message_text, conversation)
+        self.process_finder_message(message_text, conversation)
 
+    def process_finder_message(self, message_text: Text, conversation: Conversation) -> None:
+        message_size = len(message_text)
+        conversation_size = len(conversation.conversation_events)
 
-def _process_finder_message(message_text: Text, conversation: Conversation) -> None:
-    message_size = len(message_text)
-    conversation_size = len(conversation.conversation_events)
+        if conversation_size <= 1:
+            conversation.add_bot_message(f"Welcome! Let me find you jokes about {message_text}")
 
-    if conversation_size <= 1:
-        conversation.add_bot_message(f"Welcome! Let me find you jokes about {message_text}")
-
-    if message_size in range(3, 121):
-        """If message size is not between 3 and 120, the api will return status 400 with error: Bad request
-        """
-        jokes = _finder_retrieve_joke(message_text)
-        if jokes:
-            for joke in jokes:
-                conversation.add_bot_message(joke)
-
+        if message_size in range(3, 121):
+            """If message size is not between 3 and 120, 
+            the api will return status 400 with error: Bad request
+            """
+            jokes = self.finder_retrieve_joke(message_text)
+            if jokes:
+                for joke in jokes:
+                    conversation.add_bot_message(joke)
+            else:
+                conversation.add_bot_message("Sorry! No jokes found. Try another word.")
         else:
-            conversation.add_bot_message("Sorry! No jokes found. Try another word.")
+            conversation.add_bot_message("You have an invalid input, please try again. Size must be between 3 and 120.")
 
-    else:
-        conversation.add_bot_message("You have an invalid input, please try again. Size must be between 3 and 120.")
+    def finder_retrieve_joke(self, message: Text) -> List:
+        response = requests.get(f"https://api.chucknorris.io/jokes/search?query={message}")
+        data = response.json()["result"]
+        joke_list = []
+        if data:
+            joke_list.append([i["value"] for i in data])
+
+        return joke_list
 
 
-def _finder_retrieve_joke(message: Text) -> List[Text]:
-    response = requests.get(f"https://api.chucknorris.io/jokes/search?query={message}")
-    data = response.json()["result"]
-    joke_list = []
-    if data:
-        joke_list.append([i["value"] for i in data])
+class BotFactory:
+    def __init__(self, query_val):
+        self.query_val = query_val
 
-    return joke_list
+    def choose_bot(self):
+        if self.query_val == "jokeFinder":
+            return ChuckNorrisJokeFinderBot()
+        return ChuckNorrisBot()
 
 @app.route("/user/<username>/message", methods=["POST"])
 def handle_user_message(username: Text) -> Text:
@@ -119,9 +126,7 @@ def handle_user_message(username: Text) -> Text:
     message_text = request.json["text"]
     query_arg = request.args.get("bot_type", "")
 
-    f = ChuckNorrisBot()
-    if query_arg == "jokeFinder":
-        f = ChuckNorrisJokeFinderBot()
+    f = BotFactory(query_arg).choose_bot()
 
     with conversationPersistence(username) as conversation:
         f.handle_message(message_text, conversation)
