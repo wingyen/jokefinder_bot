@@ -125,8 +125,8 @@ def handle_user_message(username: Text) -> Text:
     """
     message_text = request.json["text"]
     query_arg = request.args.get("bot_type", "")
-
-    f = BotFactory(query_arg).choose_bot()
+    factory = BotFactory(query_arg)
+    f = factory.choose_bot()
 
     with conversationPersistence(username) as conversation:
         f.handle_message(message_text, conversation)
