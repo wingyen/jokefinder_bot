@@ -1,7 +1,6 @@
 from collections import defaultdict
 from contextlib import contextmanager
 from typing import Text, Dict, List, Generator
-import math
 import requests
 from flask import Flask, request, jsonify
 
@@ -152,7 +151,7 @@ def retrieve_conversation_history(username: Text) -> Text:
     if history:
         return jsonify(history)
     else:
-        return jsonify(history), 404
+        return "[]", 404
 
 
 if __name__ == "__main__":
