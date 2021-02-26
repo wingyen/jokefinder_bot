@@ -8,9 +8,10 @@ app = Flask(__name__)
 
 inmemory_storage = defaultdict(list)
 
+
 class Conversation(object):
     def __init__(
-        self, conversation_id: Text, old_conversation_events: List[Dict]
+            self, conversation_id: Text, old_conversation_events: List[Dict]
     ) -> None:
         """Creates a conversation.
 
@@ -21,18 +22,19 @@ class Conversation(object):
         self.conversation_events = old_conversation_events
         self.number_old_events = len(old_conversation_events)
 
-    def addd_user_message(self, message: Text) -> None:
+    def add_user_message(self, message: Text) -> None:
         self.conversation_events.append({"type": "user", "message": message})
 
     def add_bot_message(self, bot_messages: Text) -> None:
         self.conversation_events.append({"type": "bot", "message": bot_messages})
 
     def new_events_dict(self) -> List[Dict]:
-        return self.conversation_events[self.number_old_events :]
+        return self.conversation_events[self.number_old_events:]
+
 
 @contextmanager
 def conversationPersistence(
-    conversation_id: Text,
+        conversation_id: Text,
 ) -> Generator[Conversation, None, None]:
     """Provides conversation history for a certain conversation.
 
@@ -53,9 +55,10 @@ def conversationPersistence(
     yield conversation
 
 
+# random jokes
 class ChuckNorrisBot:
     def handle_message(self, message_text: Text, conversation: Conversation) -> None:
-        conversation.addd_user_message(message_text)
+        conversation.add_user_message(message_text)
 
         if len(conversation.conversation_events) <= 1:
             conversation.add_bot_message(f"Welcome! Let me tell you a joke.")
@@ -67,10 +70,10 @@ class ChuckNorrisBot:
         response = requests.get("https://api.chucknorris.io/jokes/random")
         return response.json()["value"]
 
-
+# Search for jokes
 class ChuckNorrisJokeFinderBot:
     def handle_message(self, message_text: Text, conversation: Conversation) -> None:
-        conversation.addd_user_message(message_text)
+        conversation.add_user_message(message_text)
         self.process_finder_message(message_text, conversation)
 
     def process_finder_message(self, message_text: Text, conversation: Conversation) -> None:
@@ -104,13 +107,14 @@ class ChuckNorrisJokeFinderBot:
 
 
 class BotFactory:
-    def __init__(self, query_val):
+    def __init__(self, query_val: Text) -> None:
         self.query_val = query_val
 
     def choose_bot(self):
         if self.query_val == "jokeFinder":
             return ChuckNorrisJokeFinderBot()
         return ChuckNorrisBot()
+
 
 @app.route("/user/<username>/message", methods=["POST"])
 def handle_user_message(username: Text) -> Text:
@@ -125,10 +129,10 @@ def handle_user_message(username: Text) -> Text:
     message_text = request.json["text"]
     query_arg = request.args.get("bot_type", "")
     factory = BotFactory(query_arg)
-    f = factory.choose_bot()
+    bot = factory.choose_bot()
 
     with conversationPersistence(username) as conversation:
-        f.handle_message(message_text, conversation)
+        bot.handle_message(message_text, conversation)
 
         bot_responses = [
             x["message"] for x in conversation.new_events_dict() if x["type"] == "bot"
