@@ -54,42 +54,30 @@ def test_retrieve_history(client: FlaskClient):
     assert bool(history3) is False
 
 
-class TestFinder:
-    def __init__(self, client):
-        self.case1 = "Chocolate"
-        self.case2 = "bibi"
-        self.case3 = "bi"
+# ------ Tests for ChuckNorrisJokeFinderBot, here I organise tests differently ------
 
-        self.response1 = client.post("/user/test_finder/message?bot_type=jokeFinder", json={"text": self.case1})
-        self.response2 = client.post("/user/test_finder/message?bot_type=jokeFinder", json={"text": self.case2})
-        self.response3 = client.post("/user/test_finder/message?bot_type=jokeFinder", json={"text": self.case3})
+scenario1 = ("Joke Exists", {"text": "Chocolate"})
+scenario2 = ("Joke Not Found", {"text": "bibi"})
+scenario3 = ("Invalid Input", {"text": "bi"})
 
-        self.response4 = client.get("/user/test_finder/message")
+joke_finder_route = "/user/test_finder/message?bot_type=jokeFinder"
 
-    def get_response_bodies(self):
-        return {
-            "1": self.response1.json,
-            "2": self.response2.json,
-            "3": self.response3.json,
-            "4": self.response4.json,
-        }
-
-
-def test_send_finder_message(client: FlaskClient):
-    o = TestFinder(client)
-    bodies = o.get_response_bodies()
-    assert o.response1.status_code == 200
-    assert bodies["1"][0] == f"Welcome! Let me find you jokes about {o.case1}"
-    assert len(bodies["1"]) == 2
-    assert bodies["2"][0] == "Sorry! No jokes found. Try another word."
-    assert bodies["3"][0] == "You have an invalid input, please try again. Size must be between 3 and 120."
-
-
-def test_retrieve_finder_history(client: FlaskClient):
-    o = TestFinder(client)
-    re = o.response4
-    body = o.get_response_bodies()["4"]
-
+def test_joke_finder_scenario1(client: FlaskClient):
+    text = scenario1[1]["text"]
+    re = client.post(joke_finder_route, json={"text": text})
     assert re.status_code == 200
-    assert body[0]["type"] == "user"
-    assert body[2]["type"] == "bot"
+    assert re.json[0] == f"Welcome! Let me find you jokes about {text}"
+
+
+def test_joke_finder_scenario2(client: FlaskClient):
+    text = scenario2[1]["text"]
+    re = client.post(joke_finder_route, json={"text": text})
+    assert re.status_code == 200
+    assert re.json[0] == f"Sorry! No jokes found. Try another word."
+
+
+def test_joke_finder_scenario3(client: FlaskClient):
+    text = scenario3[1]["text"]
+    re = client.post(joke_finder_route, json={"text": text})
+    assert re.status_code == 200
+    assert re.json[0] == f"You have an invalid input, please try again. Size must be between 3 and 120."
