@@ -13,8 +13,7 @@ class Dialog(object):
     def __init__(
             self, dialog_id: Text, old_events: List[Dict]
     ) -> None:
-        """Creates a dialog.
-
+        """
         Args:
             old_events: Events which happened earlier in this dialog.
         """
@@ -33,22 +32,18 @@ class Dialog(object):
 
 
 @contextmanager
-def dialog_persistence(conversation_id: Text) -> Generator[Dialog, None, None]:
+def dialog_persistence(dialog_id: Text) -> Generator[Dialog, None, None]:
     """Provides dialog history for a certain dialog.
 
     Saves any new events to the dialog storage when the context manager is exited.
 
-    Args:
-        conversation_id: The ID of the dialog. This is usually the same as the
-            username.
-
     Returns:
-        Conversation from the dialog storage.
+        Dialogs from the dialog storage.
     """
-    old_conversation_events = inmemory_storage[conversation_id]
-    conversation = Dialog(conversation_id, old_conversation_events)
+    old_events = inmemory_storage[dialog_id]
+    dialog = Dialog(dialog_id, old_events)
 
-    yield conversation
+    yield dialog
 
 
 # random jokes
@@ -117,7 +112,7 @@ def handle_user_message(dialog_id: Text) -> Text:
     """Returns a bot response for an incoming user message.
 
     :param dialog_id: : The id which serves as unique dialog ID.
-        
+
     """
     message_text = request.json["text"]
     query_arg = request.args.get("bot_type", "")
